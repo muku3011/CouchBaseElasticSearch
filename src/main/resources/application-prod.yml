@@ -1,0 +1,5 @@
+server:
+  port: 8200
+
+name: Our prod profile
+environment: Prod Environmnet

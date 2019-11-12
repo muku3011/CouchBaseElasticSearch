@@ -1,0 +1,23 @@
+# Setting Spring default profile (it will look for application-{dev}.yml file)
+spring:
+  profiles:
+    active: prod
+
+  # Couchbase configuration
+  couchbase:
+    username: first-bucket
+    password: first-bucket
+    bootstrap-hosts:
+      - 127.0.0.1
+    bucket:
+      name: first-bucket
+      password: first-bucket
+
+  data:
+    couchbase:
+      auto-index: true
+
+# Common properties for all profiles
+logging:
+  level:
+    web: INFO

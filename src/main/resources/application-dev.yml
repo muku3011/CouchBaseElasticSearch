@@ -1,0 +1,5 @@
+server:
+  port: 8100
+
+name: Our dev profile
+environment: Dev Environmnet
