@@ -18,20 +18,21 @@ services:
     ports:
       - 9200:9200
       - 9300:9300
+      - 9600:9600 # Required for Performance Analyzer
     environment:
-      # Elasticsearch uses node.name as a human readable identifier for a particular instance of Elasticsearch so it is included in the response of many APIs.
+      # Elasticsearch uses node.name as a human readable identifier for a particular instance of Elasticsearch, so it is included in the response of many APIs.
       # It defaults to the hostname that the machine has when Elasticsearch starts but can be configured explicitly in elasticsearch.yml
       - node.name=search
       # A node can only join a cluster when it shares its cluster.name with all the other nodes in the cluster.
-      # The default name is elasticsearch, but you should change it to an appropriate name which describes the purpose of the cluster.
+      # The default given name is elasticsearch, but you should change it to an appropriate name which describes the purpose of the cluster.
       - cluster.name=es-docker-cluster
       # By default, Elasticsearch binds to loopback addresses only — e.g. 127.0.0.1 and [::1].
       #- network.host=127.0.0.1
-      # Automatic index creation is controlled by the action.auto_create_index setting.
+      # Automatic index creation is checked by the action.auto_create_index setting.
       # This setting defaults to true, which allows any index to be created automatically.
       # More information: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html
       - action.auto_create_index=true
-      # This is sufficient to run a single development node on a server.
+      # This is enough to run a single development node on a server.
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - bootstrap.memory_lock=true
@@ -39,6 +40,19 @@ services:
       memlock:
         soft: -1
         hard: -1
+    networks:
+      - elastic-couchbase
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.5.0
+    container_name: kibana
+    ports:
+      - 5601:5601
+    expose:
+      - "5601"  # http://localhost:5601/
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
     networks:
       - elastic-couchbase
 
