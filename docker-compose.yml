@@ -26,11 +26,11 @@ services:
       # The default name is elasticsearch, but you should change it to an appropriate name which describes the purpose of the cluster.
       - cluster.name=es-docker-cluster
       # By default, Elasticsearch binds to loopback addresses only — e.g. 127.0.0.1 and [::1].
-      - network.host=127.0.0.1
+      #- network.host=127.0.0.1
       # Automatic index creation is controlled by the action.auto_create_index setting.
       # This setting defaults to true, which allows any index to be created automatically.
       # More information: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html
-      - action.auto_create_index=.monitoring*,.watches,.triggered_watches,.watcher-history*,.ml*
+      - action.auto_create_index=true
       # This is sufficient to run a single development node on a server.
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
