@@ -14,6 +14,7 @@ import org.springframework.web.client.RestClientException;
 
 import javax.annotation.PostConstruct;
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -133,7 +134,7 @@ public class CouchbaseDevInitialization implements CouchbaseInitialization {
 
     private void sendRequest(String url, MultiValueMap<String, String> multiValueMap) {
         log.info("Request URL : " + url);
-        for (Map.Entry entry : multiValueMap.entrySet()) {
+        for (Map.Entry<String, List<String>> entry : multiValueMap.entrySet()) {
             log.debug(MessageFormat.format("Key ->:{0}, Value -> {1}", entry.getKey(), entry.getValue()));
         }
         try {

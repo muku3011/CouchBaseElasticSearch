@@ -1,6 +1,6 @@
 package com.learn.java.controller;
 
-import com.learn.java.document.Blog;
+import com.learn.java.couchbase.document.Blog;
 import com.learn.java.exception.ErrorCode;
 import com.learn.java.exception.ObjectNotFoundException;
 import com.learn.java.service.BlogService;

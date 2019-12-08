@@ -1,7 +1,7 @@
 package com.learn.java.service;
 
-import com.learn.java.repository.BlogRepository;
-import com.learn.java.document.Blog;
+import com.learn.java.couchbase.repository.BlogRepository;
+import com.learn.java.couchbase.document.Blog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;

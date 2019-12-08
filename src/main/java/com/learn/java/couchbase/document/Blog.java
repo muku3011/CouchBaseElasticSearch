@@ -1,10 +1,10 @@
-package com.learn.java.document;
+package com.learn.java.couchbase.document;
 
 import com.couchbase.client.java.repository.annotation.Field;
-import com.couchbase.client.java.repository.annotation.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.couchbase.core.mapping.Document;
 
 import javax.validation.constraints.NotNull;

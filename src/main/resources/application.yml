@@ -1,7 +1,9 @@
 # Setting Spring default profile (it will look for application-{dev}.yml file)
 spring:
   profiles:
-    active: prod
+    active: dev
+
+
 
   # Couchbase configuration
   couchbase:
@@ -16,6 +18,19 @@ spring:
   data:
     couchbase:
       auto-index: true
+      repositories:
+        type: AUTO
+
+    elasticsearch:
+      cluster-name: es-docker-cluster
+      cluster-nodes: 127.0.0.1:9300
+      repositories:
+        enabled: false
+
+  elasticsearch:
+    rest:
+      uris:
+        - http://127.0.0.1:9200
 
 # Common properties for all profiles
 logging:
