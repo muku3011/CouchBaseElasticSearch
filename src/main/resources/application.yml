@@ -3,8 +3,6 @@ spring:
   profiles:
     active: dev
 
-
-
   # Couchbase configuration
   couchbase:
     username: first-bucket

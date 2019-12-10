@@ -56,5 +56,17 @@ services:
     networks:
       - elastic-couchbase
 
+  connector:
+    image: docker.connector:1.0.0-SNAPSHOT
+    container_name: cbec
+    environment:
+      COUCH_HOST: couchbase
+      ELASTIC_HOST: elasticsearch
+    networks:
+      - elastic-couchbase
+    links:
+      - couchbase
+      - elasticsearch
+
 networks:
   elastic-couchbase:
