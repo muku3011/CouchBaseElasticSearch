@@ -9,6 +9,29 @@ services:
       - 8092:8092
       - 8093:8093
       - 11210:11210
+    entrypoint:
+      - /bin/bash
+      - -c
+      - "echo 'Launching couchbase' &&
+              /usr/sbin/runsvdir-start &
+              (
+                  ok=1; \
+                  while [ $$ok != 0 ]; do \
+                      sleep 5; \
+                      echo 'Couchbase is starting (rest api not available)'; \
+                      curl --connect-timeout 1 -s  http://127.0.0.1:8091 > /dev/null; \
+                      ok=$$?; \
+                  done
+              ) &&
+              (
+                  echo 'Configuring Couchbase' &&
+                  echo 'Creating cluster' &&
+                  couchbase-cli cluster-init -c 127.0.0.1:8091 --cluster-username=${COUCHBASE_ADMIN_USER} --cluster-password=${COUCHBASE_ADMIN_PWD} --cluster-ramsize=512 --cluster-index-ramsize=512 --cluster-fts-ramsize=256 --services=data,index,query,fts &&
+                  echo 'Creating '${BUCKET_NAME}' bucket' &&
+                  couchbase-cli bucket-create -c 127.0.0.1:8091 -u ${COUCHBASE_ADMIN_USER} -p ${COUCHBASE_ADMIN_PWD} --bucket=${BUCKET_NAME} --bucket-type=couchbase --bucket-ramsize=300
+              ) &&
+              echo 'Initialization performed' &&
+              tail -f /dev/null"
     networks:
       - elastic-couchbase
 
