@@ -1,0 +1,117 @@
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "autocomplete_filter": {
+          "type": "edge_ngram",
+          "min_gram": 1,
+          "max_gram": 20
+        }
+      },
+      "analyzer": {
+        "autocomplete": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "autocomplete_filter"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "type": {
+        "type": "keyword"
+      },
+      "owner": {
+        "type": "keyword"
+      },
+      "name": {
+        "type": "keyword",
+        "fields": {
+          "search": {
+            "type": "text",
+            "analyzer": "autocomplete",
+            "fielddata": true
+          }
+        }
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "autocomplete",
+        "fielddata": true
+      },
+      "externalId": {
+        "type": "keyword"
+      },
+      "createdBy": {
+        "type": "keyword"
+      },
+      "url": {
+        "type": "keyword"
+      },
+      "bookmark": {
+        "type": "keyword"
+      },
+      "state": {
+        "type": "text",
+        "fielddata": true
+      },
+      "subscribers": {
+        "type": "text"
+      },
+      "content": {
+        "type": "text"
+      },
+      "activeState": {
+        "type": "text",
+        "fielddata": true
+      },
+      "priority": {
+        "type": "integer"
+      },
+      "schedulingEvents": {
+        "type": "nested"
+      },
+      "search": {
+        "type": "keyword",
+        "fields": {
+          "search": {
+            "type": "text",
+            "analyzer": "autocomplete",
+            "fielddata": true
+          }
+        }
+      },
+      "msisdn": {
+        "type": "keyword",
+        "fields": {
+          "search": {
+            "type": "text",
+            "analyzer": "autocomplete",
+            "fielddata": true
+          }
+        }
+      },
+      "optOut": {
+        "type": "keyword"
+      },
+      "associatedBatch": {
+        "type": "text",
+        "index": false
+      },
+      "labels": {
+        "type": "keyword",
+        "fields": {
+          "search": {
+            "type": "text",
+            "analyzer": "autocomplete",
+            "fielddata": true
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-version: '3'
+version: '3.7'
 services:
 
   couchbase:
@@ -9,29 +9,19 @@ services:
       - 8092:8092
       - 8093:8093
       - 11210:11210
+    volumes:
+      - "./init/cb-init.sh:/usr/local/bin/cb-init.sh"
+    environment:
+      CB_USER: ${CB_USER}
+      CB_PWD: ${CB_PWD}
+      CB_BUCKET: ${CB_BUCKET}
     entrypoint:
-      - /bin/bash
-      - -c
-      - "echo 'Launching couchbase' &&
-              /usr/sbin/runsvdir-start &
-              (
-                  ok=1; \
-                  while [ $$ok != 0 ]; do \
-                      sleep 5; \
-                      echo 'Couchbase is starting (rest api not available)'; \
-                      curl --connect-timeout 1 -s  http://127.0.0.1:8091 > /dev/null; \
-                      ok=$$?; \
-                  done
-              ) &&
-              (
-                  echo 'Configuring Couchbase' &&
-                  echo 'Creating cluster' &&
-                  couchbase-cli cluster-init -c 127.0.0.1:8091 --cluster-username=${COUCHBASE_ADMIN_USER} --cluster-password=${COUCHBASE_ADMIN_PWD} --cluster-ramsize=512 --cluster-index-ramsize=512 --cluster-fts-ramsize=256 --services=data,index,query,fts &&
-                  echo 'Creating '${BUCKET_NAME}' bucket' &&
-                  couchbase-cli bucket-create -c 127.0.0.1:8091 -u ${COUCHBASE_ADMIN_USER} -p ${COUCHBASE_ADMIN_PWD} --bucket=${BUCKET_NAME} --bucket-type=couchbase --bucket-ramsize=300
-              ) &&
-              echo 'Initialization performed' &&
-              tail -f /dev/null"
+      - cb-init.sh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://${CB_USER}:${CB_PWD}@127.0.0.1:8091/pools/default/buckets/${CB_BUCKET}"]
+      interval: 1s
+      timeout: 3s
+      retries: 50
     networks:
       - elastic-couchbase
 
@@ -42,40 +32,30 @@ services:
       - 9200:9200
       - 9300:9300
       - 9600:9600 # Required for Performance Analyzer
+    volumes:
+      - "./init/es-init.sh:/usr/local/bin/es-init.sh"
+      - "./init/mapping.json:/usr/local/bin/mapping.json"
     environment:
-      # Elasticsearch uses node.name as a human readable identifier for a particular instance of Elasticsearch, so it is included in the response of many APIs.
-      # It defaults to the hostname that the machine has when Elasticsearch starts but can be configured explicitly in elasticsearch.yml
-      - node.name=search
-      # A node can only join a cluster when it shares its cluster.name with all the other nodes in the cluster.
-      # The default given name is elasticsearch, but you should change it to an appropriate name which describes the purpose of the cluster.
-      - cluster.name=es-docker-cluster
-      # By default, Elasticsearch binds to loopback addresses only — e.g. 127.0.0.1 and [::1].
-      #- network.host=127.0.0.1
-      # Automatic index creation is checked by the action.auto_create_index setting.
-      # This setting defaults to true, which allows any index to be created automatically.
-      # More information: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-index_.html
+      - node.name=${ES_NODE}
+      - cluster.name=${ES_CLUSTER}
       - action.auto_create_index=true
-      # This is enough to run a single development node on a server.
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - bootstrap.memory_lock=true
+      - ES_USER=${ES_USER}
+      - ES_PWD=${ES_PWD}
+      - ES_INDEX=${ES_INDEX}
+    entrypoint:
+      - es-init.sh
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    networks:
-      - elastic-couchbase
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.5.0
-    container_name: kibana
-    ports:
-      - 5601:5601
-    expose:
-      - "5601"  # http://localhost:5601/
-    environment:
-      ELASTICSEARCH_URL: http://elasticsearch:9200
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail 127.0.0.1:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     networks:
       - elastic-couchbase
 
@@ -83,10 +63,21 @@ services:
     image: docker.connector:1.0.0-SNAPSHOT
     container_name: cbec
     environment:
-      COUCH_HOST: couchbase
-      ELASTIC_HOST: elasticsearch
+      CB_HOST: couchbase
+      ES_HOST: elasticsearch
+      CB_PWD: ${CB_PWD}
+      CB_USER: ${CB_USER}
+      CB_BUCKET: ${CB_BUCKET}
+      ES_USER: ${ES_USER}
+      ES_PWD: ${ES_PWD}
+      ES_INDEX: ${ES_INDEX}
+      ES_REP_PREFIX: ${ES_REP_PREFIX}
     networks:
       - elastic-couchbase
+    depends_on:
+      - elasticsearch
+      - couchbase
+    restart: on-failure
     links:
       - couchbase
       - elasticsearch
