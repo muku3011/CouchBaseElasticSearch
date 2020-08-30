@@ -2,21 +2,17 @@ version: '3.7'
 services:
 
   couchbase:
-    image: couchbase:community-6.0.0
+    image: couchbase:latest
     container_name: db
     ports:
       - 8091:8091
       - 8092:8092
       - 8093:8093
       - 11210:11210
-    volumes:
-      - "./init/cb-init.sh:/usr/local/bin/cb-init.sh"
     environment:
       CB_USER: ${CB_USER}
       CB_PWD: ${CB_PWD}
       CB_BUCKET: ${CB_BUCKET}
-    entrypoint:
-      - cb-init.sh
     healthcheck:
       test: ["CMD", "curl", "-f", "http://${CB_USER}:${CB_PWD}@127.0.0.1:8091/pools/default/buckets/${CB_BUCKET}"]
       interval: 1s
@@ -26,15 +22,12 @@ services:
       - elastic-couchbase
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.1
     container_name: search
     ports:
       - 9200:9200
       - 9300:9300
       - 9600:9600 # Required for Performance Analyzer
-    volumes:
-      - "./init/es-init.sh:/usr/local/bin/es-init.sh"
-      - "./init/mapping.json:/usr/local/bin/mapping.json"
     environment:
       - node.name=${ES_NODE}
       - cluster.name=${ES_CLUSTER}
@@ -45,8 +38,6 @@ services:
       - ES_USER=${ES_USER}
       - ES_PWD=${ES_PWD}
       - ES_INDEX=${ES_INDEX}
-    entrypoint:
-      - es-init.sh
     ulimits:
       memlock:
         soft: -1
@@ -58,29 +49,6 @@ services:
       retries: 3
     networks:
       - elastic-couchbase
-
-  connector:
-    image: docker.connector:1.0.0-SNAPSHOT
-    container_name: cbec
-    environment:
-      CB_HOST: couchbase
-      ES_HOST: elasticsearch
-      CB_PWD: ${CB_PWD}
-      CB_USER: ${CB_USER}
-      CB_BUCKET: ${CB_BUCKET}
-      ES_USER: ${ES_USER}
-      ES_PWD: ${ES_PWD}
-      ES_INDEX: ${ES_INDEX}
-      ES_REP_PREFIX: ${ES_REP_PREFIX}
-    networks:
-      - elastic-couchbase
-    depends_on:
-      - elasticsearch
-      - couchbase
-    restart: on-failure
-    links:
-      - couchbase
-      - elasticsearch
 
 networks:
   elastic-couchbase:

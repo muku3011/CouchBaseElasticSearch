@@ -1,3 +1,4 @@
+/*
 package com.learn.java.controller;
 
 import com.learn.java.couchbase.document.Blog;
@@ -50,3 +51,4 @@ public class BlogController {
         blogService.deleteBlog(id);
     }
 }
+*/

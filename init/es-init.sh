@@ -23,7 +23,7 @@ initializeElasticsearch() {
     # Elasticsearch started if HTTP response code is 200
     if [ "$response" -eq 200 ]; then # asdad
       printf '\nConfiguring Elasticsearch\n'
-      configureElasticsearch
+      # configureElasticsearch
       return
     else
       printf '\nElasticsearch not started yet, waiting 5 more seconds ...\n'

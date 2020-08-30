@@ -5,12 +5,12 @@ spring:
 
   # Couchbase configuration
   couchbase:
-    username: ${COUCHBASE_ADMIN_USER}
-    password: ${COUCHBASE_ADMIN_PWD}
+    username: ${CB_USER}
+    password: ${CB_PWD}
     bootstrap-hosts:
       - 127.0.0.1
     bucket:
-      name: ${BUCKET_NAME}
+      name: ${CB_BUCKET}
 
   data:
     couchbase:
@@ -19,7 +19,7 @@ spring:
         type: AUTO
 
     elasticsearch:
-      cluster-name: ${ELASTIC_CLUSTER_NAME}
+      cluster-name: ${ES_CLUSTER}
       cluster-nodes: 127.0.0.1:9300
       repositories:
         enabled: false
@@ -28,10 +28,6 @@ spring:
     rest:
       uris:
         - http://127.0.0.1:9200
-
-nats:
-  spring:
-    server: nats://localhost:4222
 
 # Common properties for all profiles
 logging:

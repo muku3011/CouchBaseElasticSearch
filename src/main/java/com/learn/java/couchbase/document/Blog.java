@@ -12,10 +12,10 @@ import javax.validation.constraints.Size;
 import java.util.Date;
 import java.util.List;
 
-@Builder
 @Data
-@AllArgsConstructor
+@Builder
 @Document
+@AllArgsConstructor
 public class Blog {
 
     @Id

@@ -1,4 +1,4 @@
-package com.learn.java.initializer;
+package com.learn.java.initializer.couchbase;
 
 import lombok.extern.java.Log;
 import org.springframework.context.annotation.Configuration;
@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Profile;
 import javax.annotation.PostConstruct;
 
 @Log
-@Profile("prod")
+@Profile("init")
 @Configuration("initializeCouchbase")
 public class CouchbaseProdInitialization implements CouchbaseInitialization {
 

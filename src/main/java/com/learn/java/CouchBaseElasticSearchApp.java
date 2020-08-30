@@ -6,8 +6,8 @@ import org.springframework.data.couchbase.repository.config.EnableCouchbaseRepos
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 @SpringBootApplication
-@EnableCouchbaseRepositories(basePackages = "com.learn.java.couchbase")
-@EnableElasticsearchRepositories(basePackages = "com.learn.java.elasticsearch")
+//@EnableCouchbaseRepositories(basePackages = "com.learn.java.couchbase")
+//@EnableElasticsearchRepositories(basePackages = "com.learn.java.elasticsearch")
 public class CouchBaseElasticSearchApp {
 
 	public static void main(String[] args) {

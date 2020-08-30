@@ -1,4 +1,4 @@
-package com.learn.java.initializer;
+package com.learn.java.initializer.couchbase;
 
 import com.learn.java.util.RestService;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +11,7 @@ import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 
 import javax.annotation.PostConstruct;
 import java.text.MessageFormat;
@@ -61,7 +62,7 @@ public class CouchbaseDevInitialization implements CouchbaseInitialization {
     private static final String SETUP_BUCKET_EVICTION_POLICY_KEY = "flushEnabled";
     private static final String SETUP_BUCKET_EVICTION_POLICY_VALUE = "valueOnly";
     private static final String SETUP_BUCKET_RAM_QUOTA_MB_KEY = "ramQuotaMB";
-    private static final String SETUP_BUCKET_RAM_QUOTA_MB_VALUE = "101";
+    private static final String SETUP_BUCKET_RAM_QUOTA_MB_VALUE = "128";
     private static final String SETUP_BUCKET_TYPE_KEY = "bucketType";
     private static final String SETUP_BUCKET_TYPE_VALUE = "membase";
     private static final String SETUP_BUCKET_NAME_KEY = "name";
@@ -76,42 +77,51 @@ public class CouchbaseDevInitialization implements CouchbaseInitialization {
     private RestService restService;
     private CouchbaseProperties couchbaseProperties;
 
+    private String baseUrl;
+
     @Autowired
     public CouchbaseDevInitialization(RestService restService, CouchbaseProperties couchbaseProperties) {
         this.couchbaseProperties = couchbaseProperties;
         this.restService = restService;
+        String host = couchbaseProperties.getBootstrapHosts().get(0);
+        baseUrl = MessageFormat.format(BASE_URL_PATTERN, host, COUCHBASE_DEFAULT_PORT);
     }
 
     @Override
     @PostConstruct
     public void initCouchBase() {
-
         // TODO check connection with couchbase bucket before starting initialization
 
-        String host = couchbaseProperties.getBootstrapHosts().get(0);
-        String baseUrl = MessageFormat.format(BASE_URL_PATTERN, host, COUCHBASE_DEFAULT_PORT);
+        try {
+            // Initialize Node
+            initializeNode();
 
-        // Initialize Node
+            // Rename Node
+            //renameNode();
+
+            // Setup Services
+            setupServices();
+
+            // Setup Admin
+            setupAdmin();
+
+            // Setup Bucket
+            setupBucket();
+
+        } catch (RestClientResponseException restClientException) {
+            log.info("Couchbase initialization stooped, HTTP response status : {}, message: {}", restClientException.getRawStatusCode(), restClientException.getResponseBodyAsString());
+            log.trace("Exception stack trace : ", restClientException);
+        }
+    }
+
+    private void setupServices() {
         MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
-        multiValueMap.add(INIT_NODE_PATH_KEY, INIT_NODE_PATH_VALUE);
-        multiValueMap.add(INIT_NODE_INDEX_PATH_KEY, INIT_NODE_INDEX_PATH_VALUE);
-
-        sendRequest(baseUrl + INIT_NODE_URL, multiValueMap);
-
-        // Rename Node
-        multiValueMap = new LinkedMultiValueMap<>();
-        multiValueMap.add(RENAME_NODE_HOSTNAME, couchbaseProperties.getBootstrapHosts().get(0));
-
-        sendRequest(baseUrl + RENAME_NODE_URL, multiValueMap);
-
-        // Setup Services
-        multiValueMap = new LinkedMultiValueMap<>();
         multiValueMap.add(SETUP_SERVICES_KEY, SETUP_SERVICES_VALUE);
-
         sendRequest(baseUrl + SETUP_SERVICE_URL, multiValueMap);
+    }
 
-        // Setup Bucket
-        multiValueMap = new LinkedMultiValueMap<>();
+    private void setupBucket() {
+        MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
         multiValueMap.add(SETUP_BUCKET_FLUSH_ENABLED_KEY, SETUP_BUCKET_FLUSH_ENABLED_VALUE);
         multiValueMap.add(SETUP_BUCKET_THREADS_NUMBER_KEY, SETUP_BUCKET_THREADS_NUMBER_VALUE);
         multiValueMap.add(SETUP_BUCKET_REPLICA_INDEX_KEY, SETUP_BUCKET_REPLICA_INDEX_VALUE);
@@ -120,20 +130,32 @@ public class CouchbaseDevInitialization implements CouchbaseInitialization {
         multiValueMap.add(SETUP_BUCKET_RAM_QUOTA_MB_KEY, SETUP_BUCKET_RAM_QUOTA_MB_VALUE);
         multiValueMap.add(SETUP_BUCKET_TYPE_KEY, SETUP_BUCKET_TYPE_VALUE);
         multiValueMap.add(SETUP_BUCKET_NAME_KEY, couchbaseProperties.getBucket().getName());
-
         sendRequest(baseUrl + SETUP_BUCKET_URL, multiValueMap);
+    }
 
-        // Setup Admin
-        multiValueMap = new LinkedMultiValueMap<>();
-        multiValueMap.add(SETUP_ADMIN_USER_NAME_KEY, couchbaseProperties.getBucket().getName());
-        multiValueMap.add(SETUP_ADMIN_PASSWORD_KEY, couchbaseProperties.getBucket().getPassword());
+    private void setupAdmin() {
+        MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
+        multiValueMap.add(SETUP_ADMIN_USER_NAME_KEY, couchbaseProperties.getUsername());
+        multiValueMap.add(SETUP_ADMIN_PASSWORD_KEY, couchbaseProperties.getPassword());
         multiValueMap.add(SETUP_ADMIN_PORT_KEY, SETUP_ADMIN_PORT_VALUE);
-
         sendRequest(baseUrl + SETUP_ADMIN_URL, multiValueMap);
     }
 
+    private void renameNode() {
+        MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
+        multiValueMap.add(RENAME_NODE_HOSTNAME, couchbaseProperties.getBootstrapHosts().get(0));
+        sendRequest(baseUrl + RENAME_NODE_URL, multiValueMap);
+    }
+
+    private void initializeNode() {
+        MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
+        multiValueMap.add(INIT_NODE_PATH_KEY, INIT_NODE_PATH_VALUE);
+        multiValueMap.add(INIT_NODE_INDEX_PATH_KEY, INIT_NODE_INDEX_PATH_VALUE);
+        sendRequest(baseUrl + INIT_NODE_URL, multiValueMap);
+    }
+
     private void sendRequest(String url, MultiValueMap<String, String> multiValueMap) {
-        log.info("Request URL : " + url);
+        log.debug("Request URL : " + url);
         for (Map.Entry<String, List<String>> entry : multiValueMap.entrySet()) {
             log.debug(MessageFormat.format("Key ->:{0}, Value -> {1}", entry.getKey(), entry.getValue()));
         }
@@ -141,9 +163,12 @@ public class CouchbaseDevInitialization implements CouchbaseInitialization {
             HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(multiValueMap, authHeader());
             ResponseEntity<Object> responseEntity = restService.getRestTemplate().exchange(url, HttpMethod.POST, httpEntity, Object.class);
             log.info("HTTP response value: {} and phrase: {}", responseEntity.getStatusCode().value(), responseEntity.getStatusCode().getReasonPhrase());
-        } catch (RestClientException restClientException) {
-            log.warn("Exception while performing POST request [{}] with error :{}", url, restClientException.getMessage());
+        } catch (RestClientResponseException restClientException) {
             log.trace("Exception stack trace : ", restClientException);
+            throw restClientException;
+        } catch (RestClientException restClientException) {
+            log.warn("Exception while performing POST request [{}] with error :{}", url, restClientException.getLocalizedMessage());
+            log.info("Exception stack trace : ", restClientException);
         }
     }
 

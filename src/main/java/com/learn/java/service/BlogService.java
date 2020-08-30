@@ -1,3 +1,4 @@
+/*
 package com.learn.java.service;
 
 import com.learn.java.couchbase.repository.BlogRepository;
@@ -8,8 +9,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-@Service
-@DependsOn({"initializeCouchbase"})
+//@Service
+//@DependsOn({"initializeElasticSearch"})
 public class BlogService {
 
     @Autowired
@@ -41,3 +42,4 @@ public class BlogService {
         blogRepository.deleteById(blogId);
     }
 }
+*/

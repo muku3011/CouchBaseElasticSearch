@@ -22,7 +22,7 @@ initializeCouchbase() {
     # Couchbase started if HTTP response code is 301
     if [ "$response" -eq 301 ]; then # asdad
       echo 'Configuring Couchbase'
-      configureCouchbase
+      # configureCouchbase
       return
     else
       printf 'Couchbase not started yet, waiting 5 more seconds ...'
